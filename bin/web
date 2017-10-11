@@ -1,0 +1,67 @@
+#!/bin/bash -e
+
+# See "Running in Production" in the API Star documentation at
+# <https://github.com/encode/apistar#running-in-production>
+
+# In development, gunicorn can automatically reload code as you edit it. To
+# enable this feature, export `GUNICORN_CMD_ARGS='--reload'` before running
+# this script.
+#
+# See:
+# * <http://docs.gunicorn.org/en/stable/settings.html>
+# * <http://docs.gunicorn.org/en/stable/settings.html#reload>
+
+# If the `PORT` environment variable is set, we're probably running on a
+# platform like Heroku that expects the application to bind to it. Otherwise,
+# default to port 5000. gunicorn will print the value on startup either way,
+# allowing administrators and developers to determine the server's base URL.
+#
+# See:
+# * <https://devcenter.heroku.com/articles/runtime-principles#web-servers>
+# * <https://devcenter.heroku.com/articles/dynos#web-dynos>
+
+PORT=${PORT:-5000}
+
+# Run the application with gunicorn. Note that the API Star documentation
+# recommends setting `--workers`. We omit this option: on our target platform,
+# this is controlled automatically using the `WEB_CONCURRENCY` environment
+# variable, which has a computed default based on the resources available at
+# runtime. Falling back to gunicorn's default configuration is safe enough, as
+# an administrator who discovers this is the wrong configuration can easily set
+# `WEB_CONCURRENCY` to override it.
+#
+# See:
+# * <https://devcenter.heroku.com/articles/python-gunicorn#basic-configuration>
+# * <http://docs.gunicorn.org/en/stable/settings.html#workers>
+#
+# The API Star documentation also recommends the Meinheld worker type. However,
+# deploying Meinheld to Heroku causes the application to fail on startup:
+#
+#     Error: class uri 'meinheld.gmeinheld.MeinheldWorker' invalid or not found:
+#     [Traceback (most recent call last):
+#       File "/app/.heroku/python/lib/python3.6/site-packages/gunicorn/util.py", line 134, in load_class
+#       File "/app/.heroku/python/lib/python3.6/importlib/__init__.py", line 126, in import_module
+#         mod = import_module('.'.join(components))
+#         return _bootstrap._gcd_import(name[level:], package, level)
+#       File "<frozen importlib._bootstrap>", line 978, in _gcd_import
+#       File "<frozen importlib._bootstrap>", line 936, in _find_and_load_unlocked
+#       File "<frozen importlib._bootstrap>", line 961, in _find_and_load
+#       File "<frozen importlib._bootstrap>", line 205, in _call_with_frames_removed
+#       File "<frozen importlib._bootstrap>", line 950, in _find_and_load_unlocked
+#       File "<frozen importlib._bootstrap>", line 655, in _load_unlocked
+#       File "<frozen importlib._bootstrap>", line 205, in _call_with_frames_removed
+#       File "<frozen importlib._bootstrap_external>", line 678, in exec_module
+#       File "/app/.heroku/python/lib/python3.6/site-packages/meinheld/__init__.py", line 1, in <module>
+#         from meinheld.server import *
+#       File "<frozen importlib._bootstrap>", line 978, in _gcd_import
+#       File "<frozen importlib._bootstrap>", line 961, in _find_and_load
+#     ImportError: libpython3.6m.so.1.0: cannot open shared object file: No such file or directory
+#     ]
+#
+# The `libpython3.6m.so` library does not appear to be present. As we don't need
+# to squeeze every ounce of performance out of this application, I've removed
+# the Meinheld worker and opened a support ticket to get an explanation from
+# Heroku.
+
+exec gunicorn app:app \
+    --bind="0.0.0.0:${PORT}"
