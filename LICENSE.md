@@ -1,6 +1,4 @@
-Copyright (c) 2017 the authors. Please see the Git history, or contact
-agora-discussion@agoranomic.org for information about the authorship of this
-project.
+Copyright 2017 Owen Jacobson.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
