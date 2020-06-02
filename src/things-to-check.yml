@@ -1,0 +1,39 @@
+---
+# Insert new items at the bottom. The index into this list is the item's
+# permalink.
+#
+# Yes, this is HTML and no, I don't care about injection.
+- permissions
+- cabling
+- for a full disk
+- the cache
+- for a version conflict
+- for a duplex mismatch
+- the firewall rules
+- <code>resolv.conf</code>
+- <code>/etc/hosts</code>
+- DNS
+- <code>CR/LF</code>
+- setuid/setgid bits
+- the default gateway
+- for IP conflicts
+- the logs
+- the port number
+- for a zonefile dot
+- I/O dammit
+- the mounts
+- the power
+- for the wrong whitespace
+- if it reloaded into bad config
+- IP forwarding
+- the trailing slash
+- the MAC address
+- if the filesystem is out of inodes
+- the line length
+- if you're on the wrong wifi network
+- if the vpn timed out
+- if that's the wrong host
+- the security groups
+- the fucking binlogs
+- the documentation
+- the manpages
