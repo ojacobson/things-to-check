@@ -2,7 +2,7 @@
 # Insert new items at the bottom. The index into this list is the item's
 # permalink.
 #
-# Yes, this is HTML and no, I don't care about injection.
+# Yes, this is Markdown and no, I don't care about injection.
 - Have you checked permissions?
 - Have you checked cabling?
 - Have you checked for a full disk?
