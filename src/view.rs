@@ -239,7 +239,6 @@ pub fn make_service() -> Result<impl Fn(&mut web::ServiceConfig) + Clone, Error>
 
     Ok(move |cfg: &mut web::ServiceConfig| {
         cfg.data(things.clone())
-            .data((123u8,))
             .service(index);
     })
 }
