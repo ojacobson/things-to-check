@@ -1,1 +1,1 @@
-web: bin/web
+web: target/release/things-to-check
