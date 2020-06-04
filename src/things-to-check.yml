@@ -3,37 +3,37 @@
 # permalink.
 #
 # Yes, this is HTML and no, I don't care about injection.
-- permissions
-- cabling
-- for a full disk
-- the cache
-- for a version conflict
-- for a duplex mismatch
-- the firewall rules
-- <code>resolv.conf</code>
-- <code>/etc/hosts</code>
-- DNS
-- <code>CR/LF</code>
-- setuid/setgid bits
-- the default gateway
-- for IP conflicts
-- the logs
-- the port number
-- for a zonefile dot
-- I/O dammit
-- the mounts
-- the power
-- for the wrong whitespace
-- if it reloaded into bad config
-- IP forwarding
-- the trailing slash
-- the MAC address
-- if the filesystem is out of inodes
-- the line length
-- if you're on the wrong wifi network
-- if the vpn timed out
-- if that's the wrong host
-- the security groups
-- the fucking binlogs
-- the documentation
-- the manpages
+- Have you checked permissions?
+- Have you checked cabling?
+- Have you checked for a full disk?
+- Have you checked the cache?
+- Have you checked for a version conflict?
+- Have you checked for a duplex mismatch?
+- Have you checked the firewall rules?
+- Have you checked `resolv.conf`?
+- Have you checked `/etc/hosts`?
+- Have you checked DNS?
+- Have you checked `CR/LF`?
+- Have you checked setuid/setgid bits?
+- Have you checked the default gateway?
+- Have you checked for IP conflicts?
+- Have you checked the logs?
+- Have you checked the port number?
+- Have you checked for a zonefile dot?
+- Have you checked I/O dammit?
+- Have you checked the mounts?
+- Have you checked the power?
+- Have you checked for the wrong whitespace?
+- Have you checked if it reloaded into bad config?
+- Have you checked IP forwarding?
+- Have you checked the trailing slash?
+- Have you checked the MAC address?
+- Have you checked if the filesystem is out of inodes?
+- Have you checked the line length?
+- Have you checked if you're on the wrong wifi network?
+- Have you checked if the vpn timed out?
+- Have you checked if that's the wrong host?
+- Have you checked the security groups?
+- Have you checked the fucking binlogs?
+- Have you checked the documentation?
+- Have you checked the manpages?

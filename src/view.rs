@@ -45,6 +45,7 @@
 
 use actix_web::{get, error, web};
 use maud::{DOCTYPE, html, Markup, PreEscaped};
+use pulldown_cmark::{Parser, Options, html};
 use rand::thread_rng;
 use rand::seq::SliceRandom;
 use serde::{Serialize, Deserialize};
@@ -105,12 +106,12 @@ impl From<&usize> for ItemQuery {
     }
 }
 
-fn index_view(req: impl Urls, idx: &usize, thing: &String) -> Result<Markup, UrlError> {
+fn index_view(req: impl Urls, idx: &usize, thing: &Thing) -> Result<Markup, UrlError> {
     Ok(html! {
         (DOCTYPE)
         html {
             head {
-                title { "Have you checked " (thing) "?" }
+                title { (thing.markdown) }
                 style {
                     (PreEscaped("
                     body {
@@ -140,11 +141,11 @@ fn index_view(req: impl Urls, idx: &usize, thing: &String) -> Result<Markup, Url
                 }
                 meta property="og:type" content="website";
                 meta property="og:title" content="Troubleshooting suggestion";
-                meta property="og:description" content={ "Have you checked " (thing) "?" };
+                meta property="og:description" content={ (thing.markdown) };
             }
             body {
                 section {
-                    p { "Have you checked " (PreEscaped(thing)) "?" }
+                    (PreEscaped(&thing.html))
                     p {
                         a href=( req.index_url(ItemQuery::default())? ) { "That wasn't it, suggest something else." }
                     }
@@ -185,7 +186,39 @@ async fn index(
 const THINGS: &str = include_str!("things-to-check.yml");
 
 #[derive(Clone)]
-struct Things(Vec<(usize, String)>);
+struct Thing {
+    markdown: String,
+    html: String,
+}
+
+impl From<String> for Thing {
+    fn from(markdown: String) -> Self {
+        let options = Options::empty();
+        let parser = Parser::new_ext(&markdown, options);
+
+        let mut html = String::new();
+        html::push_html(&mut html, parser);
+
+        Thing{
+            markdown,
+            html,
+        }
+    }
+}
+
+#[derive(Clone)]
+struct Things(Vec<(usize, Thing)>);
+
+fn load_things(src: &str) -> serde_yaml::Result<Things> {
+    let raw_things: Vec<String> = serde_yaml::from_str(src)?;
+
+    Ok(Things(
+        raw_things.into_iter()
+            .map(Thing::from)
+            .enumerate()
+            .collect()
+    ))
+}
 
 /// Errors that can arise initializing the service.
 #[derive(Error, Debug)]
@@ -201,14 +234,11 @@ pub enum Error {
 /// The returned function will configure any actix-web App with the necessary
 /// state to tell people how to troubleshoot problems.
 pub fn make_service() -> Result<impl Fn(&mut web::ServiceConfig) + Clone, Error> {
-    let things: Vec<String> = serde_yaml::from_str(THINGS)?;
-    let things = things.into_iter()
-        .enumerate()
-        .collect();
-    let things = Things(things);
+    let things = load_things(THINGS)?;
 
     Ok(move |cfg: &mut web::ServiceConfig| {
         cfg.data(things.clone())
+            .data((123u8,))
             .service(index);
     })
 }
