@@ -1,11 +1,9 @@
-#![feature(proc_macro_hygiene)]
-
 use actix_web::{App, HttpServer};
 use std::io;
 use thiserror::Error;
 
-mod twelve;
-mod view;
+use things_to_check::twelve;
+use things_to_check::view;
 
 #[derive(Error, Debug)]
 pub enum Error {

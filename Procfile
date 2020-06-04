@@ -1,1 +1,1 @@
-web: target/release/things-to-check
+web: target/release/web
