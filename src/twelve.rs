@@ -1,27 +1,27 @@
 //! A [twelve-factor application][1] reads [its configuration][2] from the environment.
-//! 
+//!
 //! In many cases, "read" directly maps to the target binary inspecting the
 //! OS-provided environment dictionary. This module provides supporting tools
 //! for reading configuration data from the environment, via `std::env`, and
 //! converting it to useful types.
-//! 
+//!
 //! [1]: https://12factor.net/
 //! [2]: https://12factor.net/config
 
 use std::env;
 use std::io;
-use std::net::{Ipv4Addr, Ipv6Addr, IpAddr, SocketAddr, ToSocketAddrs};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs};
 use std::num;
 use thiserror::Error;
 
 /// Errors that can arise when reading a port number from the environment.
-/// 
+///
 /// For convenience when returning errors into `main`, this type can be
 /// converted to std::io::Error.
 #[derive(Error, Debug)]
 pub enum Error {
     /// PORT was set, but contained a non-unicode value that sys::env can't parse.
-    /// 
+    ///
     /// For obvious reasons, this cannot be converted to a port number. Rather
     /// than ignoring this error, we report it, so that misconfiguration can be
     /// detected early.
@@ -31,7 +31,7 @@ pub enum Error {
         source: env::VarError,
     },
     /// PORT was set, but was set to a non-numeric value.FnOnce
-    /// 
+    ///
     /// PORT can only be used to select a port number if numeric. Rather than
     /// ignoring this error, we report it, so that misconfiguration can be
     /// detected early.
@@ -39,18 +39,18 @@ pub enum Error {
     ParseError {
         #[from]
         source: num::ParseIntError,
-    }
+    },
 }
 
 /// A listen address consisting of only a port number.
-/// 
+///
 /// Listening on this address will bind to both the ip4 and ip6 addresses on the
 /// current host, assuming both ip4 and ip6 are supported.
 #[derive(Debug, Clone)]
 pub struct PortAddr {
     /// When used in an std::net::SocketAddr context, this is the port number to
     /// bind on.
-    port: u16
+    port: u16,
 }
 
 fn v4(port_addr: &PortAddr) -> SocketAddr {
@@ -65,28 +65,25 @@ impl ToSocketAddrs for PortAddr {
     type Iter = std::vec::IntoIter<SocketAddr>;
 
     fn to_socket_addrs(&self) -> io::Result<Self::Iter> {
-        let addrs = vec![
-            v6(self),
-            v4(self),
-        ];
+        let addrs = vec![v6(self), v4(self)];
 
         Ok(addrs.into_iter())
     }
 }
 
 /// Query the environment for a port number.
-/// 
+///
 /// This will read the PORT environment variable. If set, it will use the value
 /// (as a number). If it's unset, then this will use the passed `default_port`
 /// number to choose the app's default port. If the PORT environment variable
 /// is set but cannot be interpreted as a port number, this will return an error
 /// indicating why, to assist the user in correcting their configuration.
 /// # Examples
-/// 
+///
 /// ```
 /// use std::net::TcpListener;
 /// mod twelve;
-/// 
+///
 /// // Listen on port 3000 (or $PORT if set), on global ip4 and ip6 interfaces.
 /// let port = twelve::port(3000)?;
 /// let listener = TcpListener::bind(port);
@@ -100,9 +97,7 @@ pub fn port(default_port: u16) -> Result<PortAddr, Error> {
         },
     };
 
-    Ok(PortAddr{
-        port,
-    })
+    Ok(PortAddr { port })
 }
 
 #[cfg(test)]
@@ -127,31 +122,28 @@ mod tests {
 
     #[quickcheck]
     fn port_addr_as_socket_addr_has_v4(addr: PortAddr) -> bool {
-        let socket_addrs = addr.to_socket_addrs()
-            .unwrap()
-            .collect::<Vec<_>>();
+        let socket_addrs = addr.to_socket_addrs().unwrap().collect::<Vec<_>>();
 
-        socket_addrs.iter()
+        socket_addrs
+            .iter()
             .any(|&socket_addr| socket_addr.is_ipv4())
     }
 
     #[quickcheck]
     fn port_addr_as_socket_addr_has_v6(addr: PortAddr) -> bool {
-        let socket_addrs = addr.to_socket_addrs()
-            .unwrap()
-            .collect::<Vec<_>>();
+        let socket_addrs = addr.to_socket_addrs().unwrap().collect::<Vec<_>>();
 
-        socket_addrs.iter()
+        socket_addrs
+            .iter()
             .any(|&socket_addr| socket_addr.is_ipv6())
     }
 
     #[quickcheck]
     fn port_addr_as_socket_addr_all_have_port(addr: PortAddr) -> bool {
-        let socket_addrs = addr.to_socket_addrs()
-            .unwrap()
-            .collect::<Vec<_>>();
+        let socket_addrs = addr.to_socket_addrs().unwrap().collect::<Vec<_>>();
 
-        socket_addrs.iter()
+        socket_addrs
+            .iter()
             .all(|&socket_addr| socket_addr.port() == addr.port)
     }
 
@@ -172,16 +164,14 @@ mod tests {
         // attempts to accelerate testing by running multiple threads, but this
         // causes race conditions as test A stomps on state used by test B.
         // Serialize tests through a mutex.
-        // 
+        //
         // Huge hack.
         static ref ENV_MUTEX: Mutex<Runner> = Mutex::new(Runner::default());
     }
 
     // Runs a body with ENV_MUTEX locked. Easier to write.
     fn env_locked<T>(f: impl FnOnce() -> T) -> T {
-        ENV_MUTEX.lock()
-            .unwrap()
-            .run(f)
+        ENV_MUTEX.lock().unwrap().run(f)
     }
 
     #[quickcheck]
@@ -193,8 +183,7 @@ mod tests {
         env_locked(|| {
             env::set_var("PORT", env_port.to_string());
 
-            let read_port = port(default_port)
-                .unwrap();
+            let read_port = port(default_port).unwrap();
 
             TestResult::from_bool(read_port.port == env_port)
         })
@@ -220,8 +209,7 @@ mod tests {
         env_locked(|| {
             env::remove_var("PORT");
 
-            let read_port = port(default_port)
-                .unwrap();
+            let read_port = port(default_port).unwrap();
 
             read_port.port == default_port
         })

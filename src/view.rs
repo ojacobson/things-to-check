@@ -1,54 +1,54 @@
 //! HTML resources that help users troubleshoot problems.
-//! 
+//!
 //! This provides a single endpoint, as well as necessary application data to
 //! power it. The endpoint can be mounted on an actix_web App using the exposed
 //! `make_service(…)` function.
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! ```
 //! let service = view::make_service()?;
 //! let app_factory = move ||
 //!     App::new()
 //!         .configure(|cfg| service(cfg));
-//! 
+//!
 //! HttpServer::new(app_factory)
 //!     .bind(port)?
 //!     .run()
 //!     .await?;
 //! ```
-//! 
+//!
 //! # Endpoints
-//! 
+//!
 //! * `/` (`GET`): an HTML page suggesting one thing to check.
-//! 
+//!
 //!   Takes an optional `item` URL parameter, which must be an integer between 0
 //!   and the number of options available (not provided). If `item` is provided,
 //!   this endpoint returns a fixed result (the `item`th suggestion in the
 //!   backing data); otherwise, it returns a randomly-selected result, for
 //!   fortuitous suggesting.
-//! 
+//!
 //!   The returned page is always `text/html` on success. Invalid `item` indices
 //!   will return an error.
-//! 
+//!
 //! # Data
-//! 
+//!
 //! This module creates a data item in the configured application, consisting of
 //! a list of strings loaded from a YAML constant. The data comes from a file in
 //! this module parsed at compile time — our target deployment environments
 //! don't support modifying it without triggering a rebuild anyways. It's parsed
 //! on startup, however, and invalid data can cause `make_service` to fail.
-//! 
+//!
 //! When adding suggestions, add them at the end. This will ensure that existing
 //! links to existing items are not invalidated or changed - the `item`
 //! parameter to the `/` endpoint is a literal index into this list.
 
-use actix_web::{get, error, web, Responder};
-use maud::{DOCTYPE, html, Markup, PreEscaped};
-use pulldown_cmark::{Parser, Options, html};
-use rand::thread_rng;
+use actix_web::{error, get, web, Responder};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
+use pulldown_cmark::{html, Options, Parser};
 use rand::seq::SliceRandom;
-use serde::{Serialize, Deserialize};
+use rand::thread_rng;
+use serde::{Deserialize, Serialize};
 use serde_urlencoded::ser;
 use std::iter;
 use thiserror::Error;
@@ -100,18 +100,13 @@ struct ItemQuery {
 
 impl From<&usize> for ItemQuery {
     fn from(idx: &usize) -> Self {
-        ItemQuery {
-            item: Some(*idx),
-        }
+        ItemQuery { item: Some(*idx) }
     }
 }
 
 type MarkupResult = Result<Markup, error::Error>;
 
-fn page(
-    head: impl FnOnce() -> MarkupResult,
-    body: impl FnOnce() -> MarkupResult,
-) -> MarkupResult {
+fn page(head: impl FnOnce() -> MarkupResult, body: impl FnOnce() -> MarkupResult) -> MarkupResult {
     Ok(html! {
         (DOCTYPE)
         html {
@@ -126,7 +121,7 @@ fn page(
 }
 
 fn stylesheet() -> Markup {
-    html!{
+    html! {
         style {
             (PreEscaped("
             body {
@@ -165,7 +160,11 @@ fn og_card(title: &str, description: &str) -> Markup {
     }
 }
 
-fn suggestion_link(req: &impl Urls, query: ItemQuery, body: impl FnOnce() -> MarkupResult) -> MarkupResult {
+fn suggestion_link(
+    req: &impl Urls,
+    query: ItemQuery,
+    body: impl FnOnce() -> MarkupResult,
+) -> MarkupResult {
     Ok(html! {
         p {
             a href=( req.index_url(query)? ) { (body()?) }
@@ -187,23 +186,27 @@ fn github_badge(repo: &str) -> Markup {
 
 fn index_view(req: impl Urls, idx: &usize, thing: &Thing) -> MarkupResult {
     page(
-        || Ok(html! {
-            title { (thing.markdown) }
-            (stylesheet())
-            (og_card("Troubleshooting suggestion", &thing.markdown))
-        }),
-        || Ok(html! {
-            section {
-                (PreEscaped(&thing.html))
-                (suggestion_link(&req, ItemQuery::default(), || Ok(html! {
-                    "That wasn't it, suggest something else."
-                }))?)
-                (suggestion_link(&req, ItemQuery::from(idx), || Ok(html! {
-                    "Share this troubleshooting suggestion."
-                }))?)
-            }
-            (github_badge("ojacobson/things-to-check"))
-        })
+        || {
+            Ok(html! {
+                title { (thing.markdown) }
+                (stylesheet())
+                (og_card("Troubleshooting suggestion", &thing.markdown))
+            })
+        },
+        || {
+            Ok(html! {
+                section {
+                    (PreEscaped(&thing.html))
+                    (suggestion_link(&req, ItemQuery::default(), || Ok(html! {
+                        "That wasn't it, suggest something else."
+                    }))?)
+                    (suggestion_link(&req, ItemQuery::from(idx), || Ok(html! {
+                        "Share this troubleshooting suggestion."
+                    }))?)
+                }
+                (github_badge("ojacobson/things-to-check"))
+            })
+        },
     )
 }
 
@@ -223,8 +226,7 @@ async fn index(
         None => return Err(error::ErrorNotFound("Not found")),
     };
 
-    Ok(index_view(req, index, thing)?
-        .with_header("Cache-Control", "no-store"))
+    Ok(index_view(req, index, thing)?.with_header("Cache-Control", "no-store"))
 }
 
 const THINGS: &str = include_str!("things-to-check.yml");
@@ -243,10 +245,7 @@ impl From<String> for Thing {
         let mut html = String::new();
         html::push_html(&mut html, parser);
 
-        Thing{
-            markdown,
-            html,
-        }
+        Thing { markdown, html }
     }
 }
 
@@ -257,10 +256,11 @@ fn load_things(src: &str) -> serde_yaml::Result<Things> {
     let raw_things: Vec<String> = serde_yaml::from_str(src)?;
 
     Ok(Things(
-        raw_things.into_iter()
+        raw_things
+            .into_iter()
             .map(Thing::from)
             .enumerate()
-            .collect()
+            .collect(),
     ))
 }
 
@@ -270,18 +270,17 @@ pub enum Error {
     /// Indicates that the included YAML was invalid in some way. This is only
     /// fixable by recompiling the program with correct YAML.
     #[error("Unable to load Things To Check YAML: {0}")]
-    DeserializeError(#[from] serde_yaml::Error)
+    DeserializeError(#[from] serde_yaml::Error),
 }
 
 /// Set up an instance of this service.
-/// 
+///
 /// The returned function will configure any actix-web App with the necessary
 /// state to tell people how to troubleshoot problems.
 pub fn make_service() -> Result<impl Fn(&mut web::ServiceConfig) + Clone, Error> {
     let things = load_things(THINGS)?;
 
     Ok(move |cfg: &mut web::ServiceConfig| {
-        cfg.data(things.clone())
-            .service(index);
+        cfg.data(things.clone()).service(index);
     })
 }

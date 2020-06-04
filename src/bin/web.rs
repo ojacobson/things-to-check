@@ -23,14 +23,9 @@ async fn main() -> Result {
 
     let service = view::make_service()?;
 
-    let app_factory = move ||
-        App::new()
-            .configure(|cfg| service(cfg));
+    let app_factory = move || App::new().configure(|cfg| service(cfg));
 
-    HttpServer::new(app_factory)
-        .bind(port)?
-        .run()
-        .await?;
-    
+    HttpServer::new(app_factory).bind(port)?.run().await?;
+
     Ok(())
 }
