@@ -43,7 +43,7 @@
 //! links to existing items are not invalidated or changed - the `item`
 //! parameter to the `/` endpoint is a literal index into this list.
 
-use actix_web::{get, error, web};
+use actix_web::{get, error, web, Responder};
 use maud::{DOCTYPE, html, Markup, PreEscaped};
 use pulldown_cmark::{Parser, Options, html};
 use rand::thread_rng;
@@ -169,7 +169,7 @@ async fn index(
     req: web::HttpRequest,
     data: web::Data<Things>,
     query: web::Query<ItemQuery>,
-) -> error::Result<Markup> {
+) -> error::Result<impl Responder> {
     let thing = match query.item {
         Some(index) => data.0.get(index),
         None => data.0.choose(&mut thread_rng()),
@@ -180,7 +180,8 @@ async fn index(
         None => return Err(error::ErrorNotFound("Not found")),
     };
 
-    Ok(index_view(req, index, thing)?)
+    Ok(index_view(req, index, thing)?
+        .with_header("Cache-Control", "no-store"))
 }
 
 const THINGS: &str = include_str!("things-to-check.yml");
