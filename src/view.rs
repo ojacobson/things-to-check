@@ -106,60 +106,86 @@ impl From<&usize> for ItemQuery {
     }
 }
 
+fn stylesheet() -> Markup {
+    html!{
+        style {
+            (PreEscaped("
+            body {
+                background: #dddde7;
+                font-color: #888;
+                font-family: Helvetica, sans-serif;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            section {
+                width: 600px;
+                margin: auto;
+            }
+
+            p {
+                font-size: 24px;
+            }
+
+            a {
+                text-decoration: none;
+            }
+            "))
+        }
+    }
+}
+
+fn og_card(title: &str, description: &str) -> Markup {
+    html! {
+        meta property="og:type" content="website";
+        meta property="og:title" content=(title);
+        meta property="og:description" content=(description);
+    }
+}
+
+fn suggestion_link(req: impl Urls, query: ItemQuery, body: impl FnOnce() -> Markup) -> Result<Markup, UrlError> {
+    Ok(html! {
+        p {
+            a href=( req.index_url(query)? ) { (body()) }
+        }
+    })
+}
+
+fn github_badge(repo: &str) -> Markup {
+    html! {
+        a href={ "https://github.com/" (repo) } {
+            img
+                style="position: absolute; top: 0; right: 0; border: 0;"
+                src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67"
+                alt="Fork me on GitHub"
+                data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png";
+        }
+    }
+}
+
 fn index_view(req: impl Urls, idx: &usize, thing: &Thing) -> Result<Markup, UrlError> {
     Ok(html! {
         (DOCTYPE)
         html {
             head {
                 title { (thing.markdown) }
-                style {
-                    (PreEscaped("
-                    body {
-                        background: #dddde7;
-                        font-color: #888;
-                        font-family: Helvetica, sans-serif;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        height: 100vh;
-                        margin: 0;
-                    }
-
-                    section {
-                        width: 600px;
-                        margin: auto;
-                    }
-
-                    p {
-                        font-size: 24px;
-                    }
-
-                    a {
-                        text-decoration: none;
-                    }
-                    "))
-                }
-                meta property="og:type" content="website";
-                meta property="og:title" content="Troubleshooting suggestion";
-                meta property="og:description" content={ (thing.markdown) };
+                (stylesheet())
+                (og_card("Troubleshooting suggestion", &thing.markdown))
             }
             body {
                 section {
                     (PreEscaped(&thing.html))
-                    p {
-                        a href=( req.index_url(ItemQuery::default())? ) { "That wasn't it, suggest something else." }
-                    }
-                    p {
-                        a href=( req.index_url(ItemQuery::from(idx))? ) { "Share this troubleshooting suggestion." }
-                    }
+                    (suggestion_link(req, ItemQuery::default(), || html! {
+                        "That wasn't it, suggest something else."
+                    }))
+                    (suggestion_link(req, ItemQuery::from(idx), || html! {
+                        "Share this troubleshooting suggestion."
+                    }))
                 }
-                a href="https://github.com/ojacobson/things-to-check" {
-                    img
-                        style="position: absolute; top: 0; right: 0; border: 0;"
-                        src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67"
-                        alt="Fork me on GitHub"
-                        data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png";
-                }
+                (github_badge("ojacobson/things-to-check"))
             }
         }
     })
