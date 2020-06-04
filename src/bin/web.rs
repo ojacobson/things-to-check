@@ -9,8 +9,6 @@ use things_to_check::view;
 pub enum Error {
     #[error("Unable to determine port number: {0}")]
     PortError(#[from] twelve::Error),
-    #[error("Unable to initialize web view: {0}")]
-    ViewError(#[from] view::Error),
     #[error("Unexpected IO error: {0}")]
     IOError(#[from] io::Error),
 }
@@ -21,7 +19,7 @@ type Result = std::result::Result<(), Error>;
 async fn main() -> Result {
     let port = twelve::port(3000)?;
 
-    let service = view::make_service()?;
+    let service = view::make_service();
 
     let app_factory = move || App::new().configure(|cfg| service(cfg));
 

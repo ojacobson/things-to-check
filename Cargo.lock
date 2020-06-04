@@ -1372,6 +1372,7 @@ dependencies = [
  "serde_urlencoded",
  "serde_yaml",
  "thiserror",
+ "uneval",
  "url",
 ]
 
@@ -1508,6 +1509,16 @@ dependencies = [
  "smallvec",
  "tokio",
  "trust-dns-proto",
+]
+
+[[package]]
+name = "uneval"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df3b95ceb1224b9d137ee19530b0d6f39c66d73098b50d41a4de4ccbf5e4f122"
+dependencies = [
+ "serde",
+ "thiserror",
 ]
 
 [[package]]

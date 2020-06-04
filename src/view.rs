@@ -36,8 +36,7 @@
 //! This module creates a data item in the configured application, consisting of
 //! a list of strings loaded from a YAML constant. The data comes from a file in
 //! this module parsed at compile time — our target deployment environments
-//! don't support modifying it without triggering a rebuild anyways. It's parsed
-//! on startup, however, and invalid data can cause `make_service` to fail.
+//! don't support modifying it without triggering a rebuild anyways.
 //!
 //! When adding suggestions, add them at the end. This will ensure that existing
 //! links to existing items are not invalidated or changed - the `item`
@@ -45,7 +44,6 @@
 
 use actix_web::{error, get, web, Responder};
 use maud::{html, Markup, PreEscaped, DOCTYPE};
-use pulldown_cmark::{html, Options, Parser};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use serde::{Deserialize, Serialize};
@@ -229,58 +227,28 @@ async fn index(
     Ok(index_view(req, index, thing)?.with_header("Cache-Control", "no-store"))
 }
 
-const THINGS: &str = include_str!("things-to-check.yml");
-
-#[derive(Clone)]
-struct Thing {
-    markdown: String,
-    html: String,
-}
-
-impl From<String> for Thing {
-    fn from(markdown: String) -> Self {
-        let options = Options::empty();
-        let parser = Parser::new_ext(&markdown, options);
-
-        let mut html = String::new();
-        html::push_html(&mut html, parser);
-
-        Thing { markdown, html }
-    }
-}
+include!("thing.struct.rs");
 
 #[derive(Clone)]
 struct Things(Vec<(usize, Thing)>);
 
-fn load_things(src: &str) -> serde_yaml::Result<Things> {
-    let raw_things: Vec<String> = serde_yaml::from_str(src)?;
-
-    Ok(Things(
-        raw_things
-            .into_iter()
-            .map(Thing::from)
-            .enumerate()
-            .collect(),
-    ))
+fn load_things(raw_things: Vec<Thing>) -> Things {
+    Things(raw_things.into_iter().enumerate().collect())
 }
 
-/// Errors that can arise initializing the service.
-#[derive(Error, Debug)]
-pub enum Error {
-    /// Indicates that the included YAML was invalid in some way. This is only
-    /// fixable by recompiling the program with correct YAML.
-    #[error("Unable to load Things To Check YAML: {0}")]
-    DeserializeError(#[from] serde_yaml::Error),
+fn raw_things() -> Vec<Thing> {
+    include!(concat!(env!("OUT_DIR"), "/things_to_check.partial.rs"))
 }
 
 /// Set up an instance of this service.
 ///
 /// The returned function will configure any actix-web App with the necessary
 /// state to tell people how to troubleshoot problems.
-pub fn make_service() -> Result<impl Fn(&mut web::ServiceConfig) + Clone, Error> {
-    let things = load_things(THINGS)?;
+pub fn make_service() -> impl Fn(&mut web::ServiceConfig) + Clone {
+    let raw_things = raw_things();
+    let things = load_things(raw_things);
 
-    Ok(move |cfg: &mut web::ServiceConfig| {
+    move |cfg: &mut web::ServiceConfig| {
         cfg.data(things.clone()).service(index);
-    })
+    }
 }
