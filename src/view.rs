@@ -106,6 +106,25 @@ impl From<&usize> for ItemQuery {
     }
 }
 
+type MarkupResult = Result<Markup, error::Error>;
+
+fn page(
+    head: impl FnOnce() -> MarkupResult,
+    body: impl FnOnce() -> MarkupResult,
+) -> MarkupResult {
+    Ok(html! {
+        (DOCTYPE)
+        html {
+            head {
+                (head()?)
+            }
+            body {
+                (body()?)
+            }
+        }
+    })
+}
+
 fn stylesheet() -> Markup {
     html!{
         style {
@@ -146,10 +165,10 @@ fn og_card(title: &str, description: &str) -> Markup {
     }
 }
 
-fn suggestion_link(req: impl Urls, query: ItemQuery, body: impl FnOnce() -> Markup) -> Result<Markup, UrlError> {
+fn suggestion_link(req: &impl Urls, query: ItemQuery, body: impl FnOnce() -> MarkupResult) -> MarkupResult {
     Ok(html! {
         p {
-            a href=( req.index_url(query)? ) { (body()) }
+            a href=( req.index_url(query)? ) { (body()?) }
         }
     })
 }
@@ -166,29 +185,26 @@ fn github_badge(repo: &str) -> Markup {
     }
 }
 
-fn index_view(req: impl Urls, idx: &usize, thing: &Thing) -> Result<Markup, UrlError> {
-    Ok(html! {
-        (DOCTYPE)
-        html {
-            head {
-                title { (thing.markdown) }
-                (stylesheet())
-                (og_card("Troubleshooting suggestion", &thing.markdown))
+fn index_view(req: impl Urls, idx: &usize, thing: &Thing) -> MarkupResult {
+    page(
+        || Ok(html! {
+            title { (thing.markdown) }
+            (stylesheet())
+            (og_card("Troubleshooting suggestion", &thing.markdown))
+        }),
+        || Ok(html! {
+            section {
+                (PreEscaped(&thing.html))
+                (suggestion_link(&req, ItemQuery::default(), || Ok(html! {
+                    "That wasn't it, suggest something else."
+                }))?)
+                (suggestion_link(&req, ItemQuery::from(idx), || Ok(html! {
+                    "Share this troubleshooting suggestion."
+                }))?)
             }
-            body {
-                section {
-                    (PreEscaped(&thing.html))
-                    (suggestion_link(req, ItemQuery::default(), || html! {
-                        "That wasn't it, suggest something else."
-                    }))
-                    (suggestion_link(req, ItemQuery::from(idx), || html! {
-                        "Share this troubleshooting suggestion."
-                    }))
-                }
-                (github_badge("ojacobson/things-to-check"))
-            }
-        }
-    })
+            (github_badge("ojacobson/things-to-check"))
+        })
+    )
 }
 
 #[get("/")]
