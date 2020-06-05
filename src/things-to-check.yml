@@ -39,3 +39,6 @@
 - Have you checked the manpages?
 - Have you checked for an expired certificate?
 - Have you checked for an expired root certificate?
+- Have you checked for a leap second?
+- Have you checked the timezone?
+- Have you checked which branch is deployed?
