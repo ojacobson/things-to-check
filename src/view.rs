@@ -1,8 +1,8 @@
 //! HTML resources that help users troubleshoot problems.
 //!
-//! This provides a single endpoint, as well as necessary application data to
-//! power it. The endpoint can be mounted on an actix_web App using the exposed
-//! `make_service(…)` function.
+//! This provides endpoints with helpful troubleshooting advice, as well as
+//! necessary application data to power them. The endpoints can be mounted on an
+//! actix_web App using the exposed `make_service(…)` function.
 //!
 //! # Examples
 //!
@@ -31,6 +31,19 @@
 //!   The returned page is always `text/html` on success. Invalid `item` indices
 //!   will return an error.
 //!
+//! * `/slack/troubleshoot` (`POST`): a Slack slash command endpoint suggesting
+//!   one thing to check.
+//!
+//!   For information on the protocol, see [Slack's own
+//!   documentation](https://api.slack.com/interactivity/slash-commands). This
+//!   endpoint cheats furiously, and ignores Slack's recommendations around
+//!   validating requests, as there is no sensitive information returned from or
+//!   stored by this service.
+//! 
+//!   This returns a JSON message object in a Slack-compatible format, which
+//!   will print the suggestion to the channel where the `/troubleshoot` command
+//!   is invoked.
+//!
 //! # Data
 //!
 //! This module creates a data item in the configured application, consisting of
@@ -43,7 +56,7 @@
 //! links to existing items are not invalidated or changed - the `item`
 //! parameter to the `/` endpoint is a literal index into this list.
 
-use actix_web::{error, get, web, Responder};
+use actix_web::{error, get, post, web, Responder, HttpResponse};
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use pulldown_cmark::{html, Options, Parser};
 use rand::seq::SliceRandom;
@@ -225,6 +238,31 @@ async fn index(
     Ok(index_view(req, index, thing)?.with_header("Cache-Control", "no-store"))
 }
 
+#[derive(Serialize)]
+struct SlackMessage {
+    response_type: &'static str,
+    text: String,
+}
+
+#[post("/slack/troubleshoot")]
+async fn slack_troubleshoot(
+    data: web::Data<Things>,
+) -> error::Result<impl Responder> {
+    let thing = data.0.choose(&mut thread_rng());
+
+    let (_, thing) = match thing {
+        Some(x) => x,
+        None => return Err(error::ErrorNotFound("Not found")),
+    };
+
+    let response = SlackMessage{
+        response_type: "in_channel",
+        text: thing.markdown.clone(),
+    };
+
+    Ok(HttpResponse::Ok().json(response))
+}
+
 const THINGS: &str = include_str!("things-to-check.yml");
 
 #[derive(Clone)]
@@ -277,6 +315,6 @@ pub fn make_service() -> Result<impl Fn(&mut web::ServiceConfig) + Clone, Error>
     let things = load_things(THINGS)?;
 
     Ok(move |cfg: &mut web::ServiceConfig| {
-        cfg.data(things.clone()).service(index);
+        cfg.data(things.clone()).service(index).service(slack_troubleshoot);
     })
 }
