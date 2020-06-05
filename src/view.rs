@@ -186,27 +186,23 @@ fn github_badge(repo: &str) -> Markup {
 
 fn index_view(req: impl Urls, idx: &usize, thing: &Thing) -> MarkupResult {
     page(
-        || {
-            Ok(html! {
-                title { (thing.markdown) }
-                (stylesheet())
-                (og_card("Troubleshooting suggestion", &thing.markdown))
-            })
-        },
-        || {
-            Ok(html! {
-                section {
-                    (PreEscaped(&thing.html))
-                    (suggestion_link(&req, ItemQuery::default(), || Ok(html! {
-                        "That wasn't it, suggest something else."
-                    }))?)
-                    (suggestion_link(&req, ItemQuery::from(idx), || Ok(html! {
-                        "Share this troubleshooting suggestion."
-                    }))?)
-                }
-                (github_badge("ojacobson/things-to-check"))
-            })
-        },
+        || Ok(html! {
+            title { (thing.markdown) }
+            (stylesheet())
+            (og_card("Troubleshooting suggestion", &thing.markdown))
+        }),
+        || Ok(html! {
+            section {
+                (PreEscaped(&thing.html))
+                (suggestion_link(&req, ItemQuery::default(), || Ok(html! {
+                    "That wasn't it, suggest something else."
+                }))?)
+                (suggestion_link(&req, ItemQuery::from(idx), || Ok(html! {
+                    "Share this troubleshooting suggestion."
+                }))?)
+            }
+            (github_badge("ojacobson/things-to-check"))
+        }),
     )
 }
 
