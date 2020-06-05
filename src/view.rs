@@ -239,9 +239,9 @@ async fn index(
 }
 
 #[derive(Serialize)]
-struct SlackMessage {
+struct SlackMessage<'a> {
     response_type: &'static str,
-    text: String,
+    text: &'a String,
 }
 
 #[post("/slack/troubleshoot")]
@@ -257,7 +257,7 @@ async fn slack_troubleshoot(
 
     let response = SlackMessage{
         response_type: "in_channel",
-        text: thing.markdown.clone(),
+        text: &thing.markdown,
     };
 
     Ok(HttpResponse::Ok().json(response))
