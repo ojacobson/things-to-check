@@ -7,15 +7,19 @@
 //! # Examples
 //!
 //! ```
+//! # use things_to_check::view;
+//! # #[actix_rt::main]
+//! # async fn main() -> std::result::Result<(), things_to_check::view::Error> {
+//! use actix_web::{App, HttpServer};
+//! 
 //! let service = view::make_service()?;
 //! let app_factory = move ||
 //!     App::new()
 //!         .configure(|cfg| service(cfg));
 //!
-//! HttpServer::new(app_factory)
-//!     .bind(port)?
-//!     .run()
-//!     .await?;
+//! HttpServer::new(app_factory);
+//! # Ok(())
+//! # }
 //! ```
 //!
 //! # Endpoints

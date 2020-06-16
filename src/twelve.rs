@@ -82,11 +82,12 @@ impl ToSocketAddrs for PortAddr {
 ///
 /// ```
 /// use std::net::TcpListener;
-/// mod twelve;
+/// use things_to_check::twelve;
 ///
 /// // Listen on port 3000 (or $PORT if set), on global ip4 and ip6 interfaces.
 /// let port = twelve::port(3000)?;
 /// let listener = TcpListener::bind(port);
+/// # Ok::<(), twelve::Error>(())
 /// ```
 pub fn port(default_port: u16) -> Result<PortAddr, Error> {
     let port = match env::var("PORT") {
