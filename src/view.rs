@@ -65,7 +65,6 @@ use serde::{Deserialize, Serialize};
 use serde_urlencoded::ser;
 use std::iter;
 use thiserror::Error;
-use url;
 
 #[derive(Error, Debug)]
 enum UrlError {
