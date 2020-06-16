@@ -1,8 +1,10 @@
 [package]
 name = "things-to-check"
 version = "0.4.1-alpha.0"
+repository = "https://github.com/ojacobson/things-to-check/"
 publish = false
 authors = ["Owen Jacobson <owen@grimoire.ca>"]
+homepage = "https://things-to-check.herokuapp.com/"
 edition = "2018"
 
 [dependencies]
