@@ -7,6 +7,10 @@ authors = ["Owen Jacobson <owen@grimoire.ca>"]
 homepage = "https://things-to-check.herokuapp.com/"
 edition = "2018"
 
+[badges.travis-ci]
+project = "ojacobson/things-to-check"
+branch = "main"
+
 [dependencies]
 actix-rt = "~1.0"
 actix-web = "~2.0"

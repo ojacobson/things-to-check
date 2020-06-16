@@ -1,5 +1,7 @@
 # Things To Check
 
+[![Build Status](https://travis-ci.org/ojacobson/things-to-check.svg?branch=main)](https://travis-ci.org/ojacobson/things-to-check)
+
 A friend of mine used to run an IRC bot that could provide "helpful"
 troubleshooting suggestions, based on places the folks in that chat had stubbed
 their toes in the past.
