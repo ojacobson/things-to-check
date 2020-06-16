@@ -11,7 +11,7 @@
 //! # #[actix_rt::main]
 //! # async fn main() -> std::result::Result<(), things_to_check::view::Error> {
 //! use actix_web::{App, HttpServer};
-//! 
+//!
 //! let service = view::make_service()?;
 //! let app_factory = move ||
 //!     App::new()
@@ -43,7 +43,7 @@
 //!   endpoint cheats furiously, and ignores Slack's recommendations around
 //!   validating requests, as there is no sensitive information returned from or
 //!   stored by this service.
-//! 
+//!
 //!   This returns a JSON message object in a Slack-compatible format, which
 //!   will print the suggestion to the channel where the `/troubleshoot` command
 //!   is invoked.
@@ -60,7 +60,7 @@
 //! links to existing items are not invalidated or changed - the `item`
 //! parameter to the `/` endpoint is a literal index into this list.
 
-use actix_web::{error, get, post, web, Responder, HttpResponse};
+use actix_web::{error, get, post, web, HttpResponse, Responder};
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use pulldown_cmark::{html, Options, Parser};
 use rand::seq::SliceRandom;
@@ -202,23 +202,27 @@ fn github_badge(repo: &str) -> Markup {
 
 fn index_view(req: impl Urls, idx: &usize, thing: &Thing) -> MarkupResult {
     page(
-        || Ok(html! {
-            title { (thing.markdown) }
-            (stylesheet())
-            (og_card("Troubleshooting suggestion", &thing.markdown))
-        }),
-        || Ok(html! {
-            section {
-                (PreEscaped(&thing.html))
-                (suggestion_link(&req, ItemQuery::default(), || Ok(html! {
-                    "That wasn't it, suggest something else."
-                }))?)
-                (suggestion_link(&req, ItemQuery::from(idx), || Ok(html! {
-                    "Share this troubleshooting suggestion."
-                }))?)
-            }
-            (github_badge("ojacobson/things-to-check"))
-        }),
+        || {
+            Ok(html! {
+                title { (thing.markdown) }
+                (stylesheet())
+                (og_card("Troubleshooting suggestion", &thing.markdown))
+            })
+        },
+        || {
+            Ok(html! {
+                section {
+                    (PreEscaped(&thing.html))
+                    (suggestion_link(&req, ItemQuery::default(), || Ok(html! {
+                        "That wasn't it, suggest something else."
+                    }))?)
+                    (suggestion_link(&req, ItemQuery::from(idx), || Ok(html! {
+                        "Share this troubleshooting suggestion."
+                    }))?)
+                }
+                (github_badge("ojacobson/things-to-check"))
+            })
+        },
     )
 }
 
@@ -248,9 +252,7 @@ struct SlackMessage<'a> {
 }
 
 #[post("/slack/troubleshoot")]
-async fn slack_troubleshoot(
-    data: web::Data<Things>,
-) -> error::Result<impl Responder> {
+async fn slack_troubleshoot(data: web::Data<Things>) -> error::Result<impl Responder> {
     let thing = data.0.choose(&mut thread_rng());
 
     let (_, thing) = match thing {
@@ -258,7 +260,7 @@ async fn slack_troubleshoot(
         None => return Err(error::ErrorNotFound("Not found")),
     };
 
-    let response = SlackMessage{
+    let response = SlackMessage {
         response_type: "in_channel",
         text: &thing.markdown,
     };
@@ -318,6 +320,8 @@ pub fn make_service() -> Result<impl Fn(&mut web::ServiceConfig) + Clone, Error>
     let things = load_things(THINGS)?;
 
     Ok(move |cfg: &mut web::ServiceConfig| {
-        cfg.data(things.clone()).service(index).service(slack_troubleshoot);
+        cfg.data(things.clone())
+            .service(index)
+            .service(slack_troubleshoot);
     })
 }
