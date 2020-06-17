@@ -1,6 +1,13 @@
 language: rust
+# 2020-06-17 - nightly hasn't had rustfmt since 2020-06-10, so builds fail on
+# that toolchain. We want to use it as far as is possible, though.
 rust:
+    - nightly
     - nightly-2020-06-10
+
+jobs:
+    allow_failures:
+        - rust: nightly
 
 cache: cargo
 
