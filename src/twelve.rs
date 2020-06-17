@@ -195,6 +195,9 @@ mod tests {
         if env_port.contains("\x00") {
             return TestResult::discard();
         }
+        if env_port.parse::<u16>().is_ok() {
+            return TestResult::discard();
+        }
 
         env_locked(|| {
             env::set_var("PORT", env_port.to_string());
