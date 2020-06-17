@@ -13,6 +13,12 @@ I thought this was such a good idea, I turned it into a web bot.
 Want to work on this code, or run it yourself? Install the following:
 
 * [An installed copy of the Rust toolchain](https://rustup.rs).
+* The `nightly` toolchain:
+
+    ```bash
+    rustup toolchain add nightly
+    rustup override set nightly
+    ```
 
 Building, testing, &c follow Rust norms: use
 [Cargo](https://doc.rust-lang.org/cargo/guide/working-on-an-existing-project.html)
