@@ -5,7 +5,7 @@ rust:
 cache: cargo
 
 install:
-    - rustup component add clippy
+    - rustup component add clippy rustfmt
     - cargo install cargo-udeps
     - cargo build
 
