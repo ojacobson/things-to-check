@@ -1,0 +1,19 @@
+version: 2.1
+
+jobs:
+    build:
+        docker:
+            - image: circleci/rust:1-buster
+        steps:
+            - checkout
+            - restore_cache:
+                key: cargo-{{ checksum "Cargo.lock" }}
+            - run: rustup component add clippy rustfmt
+            - run: cargo install cargo-udeps
+            - run: tools/checks
+            - save_cache:
+                key: cargo-{{ checksum "Cargo.lock" }}
+                paths:
+                    - ~/.cargo
+                    - ~/.rustup
+                    - target
