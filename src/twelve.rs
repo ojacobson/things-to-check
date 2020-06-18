@@ -8,6 +8,8 @@
 //! [1]: https://12factor.net/
 //! [2]: https://12factor.net/config
 
+#[cfg(test)]
+use proptest_derive::Arbitrary;
 use std::env;
 use std::io;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, ToSocketAddrs};
@@ -47,6 +49,7 @@ pub enum Error {
 /// Listening on this address will bind to both the ip4 and ip6 addresses on the
 /// current host, assuming both ip4 and ip6 are supported.
 #[derive(Debug, Clone)]
+#[cfg_attr(test, derive(Arbitrary))]
 pub struct PortAddr {
     /// When used in an std::net::SocketAddr context, this is the port number to
     /// bind on.
@@ -104,8 +107,7 @@ pub fn port(default_port: u16) -> Result<PortAddr, Error> {
 #[cfg(test)]
 mod tests {
     use lazy_static::lazy_static;
-    use quickcheck::{Arbitrary, Gen, TestResult};
-    use quickcheck_macros::quickcheck;
+    use proptest::prelude::*;
     use std::env;
     use std::ffi::OsStr;
     use std::os::unix::ffi::OsStrExt;
@@ -113,39 +115,33 @@ mod tests {
 
     use super::*;
 
-    impl Arbitrary for PortAddr {
-        fn arbitrary<G: Gen>(g: &mut G) -> Self {
-            Self {
-                port: u16::arbitrary(g),
-            }
+    proptest! {
+        #[test]
+        fn port_addr_as_socket_addr_has_v4(addr: PortAddr) {
+            let socket_addrs: Vec<_> = addr.to_socket_addrs().unwrap().collect();
+
+            assert!(socket_addrs
+                .iter()
+                .any(|&socket_addr| socket_addr.is_ipv4()));
         }
-    }
 
-    #[quickcheck]
-    fn port_addr_as_socket_addr_has_v4(addr: PortAddr) -> bool {
-        let socket_addrs = addr.to_socket_addrs().unwrap().collect::<Vec<_>>();
+        #[test]
+        fn port_addr_as_socket_addr_has_v6(addr: PortAddr) {
+            let socket_addrs: Vec<_> = addr.to_socket_addrs().unwrap().collect();
 
-        socket_addrs
-            .iter()
-            .any(|&socket_addr| socket_addr.is_ipv4())
-    }
+            assert!(socket_addrs
+                .iter()
+                .any(|&socket_addr| socket_addr.is_ipv6()));
+        }
 
-    #[quickcheck]
-    fn port_addr_as_socket_addr_has_v6(addr: PortAddr) -> bool {
-        let socket_addrs = addr.to_socket_addrs().unwrap().collect::<Vec<_>>();
+        #[test]
+        fn port_addr_as_socket_addr_all_have_port(addr: PortAddr) {
+            let socket_addrs: Vec<_> = addr.to_socket_addrs().unwrap().collect();
 
-        socket_addrs
-            .iter()
-            .any(|&socket_addr| socket_addr.is_ipv6())
-    }
-
-    #[quickcheck]
-    fn port_addr_as_socket_addr_all_have_port(addr: PortAddr) -> bool {
-        let socket_addrs = addr.to_socket_addrs().unwrap().collect::<Vec<_>>();
-
-        socket_addrs
-            .iter()
-            .all(|&socket_addr| socket_addr.port() == addr.port)
+            assert!(socket_addrs
+                .iter()
+                .all(|&socket_addr| socket_addr.port() == addr.port));
+        }
     }
 
     #[derive(Default)]
@@ -161,10 +157,10 @@ mod tests {
 
     lazy_static! {
         // The tests in this module manipulate a global, shared, external
-        // resource (the PORT environment variable). The quickcheck tool
-        // attempts to accelerate testing by running multiple threads, but this
-        // causes race conditions as test A stomps on state used by test B.
-        // Serialize tests through a mutex.
+        // resource (the PORT environment variable). The proptest tool attempts
+        // to accelerate testing by running multiple threads, but this causes
+        // race conditions as test A stomps on state used by test B. Serialize
+        // tests through a mutex.
         //
         // Huge hack.
         static ref ENV_MUTEX: Mutex<Runner> = Mutex::new(Runner::default());
@@ -175,48 +171,47 @@ mod tests {
         ENV_MUTEX.lock().unwrap().run(f)
     }
 
-    #[quickcheck]
-    fn port_preserves_numeric_values(env_port: u16, default_port: u16) -> TestResult {
-        if env_port == default_port {
-            return TestResult::discard();
+    proptest! {
+        #[test]
+        fn port_preserves_numeric_values(env_port: u16, default_port: u16) {
+            prop_assume!(env_port != default_port);
+
+            env_locked(|| {
+                env::set_var("PORT", env_port.to_string());
+
+                let read_port = port(default_port).unwrap();
+
+                assert_eq!(read_port.port, env_port);
+            });
         }
 
-        env_locked(|| {
-            env::set_var("PORT", env_port.to_string());
+        #[test]
+        fn port_rejects_strings(env_port: String, default_port: u16) {
+            // Reject any sample with a NUL byte; env::set_var (well, libc)
+            // can't cope.
+            prop_assume!(!env_port.contains("\x00"));
+            // Reject any sample that _should_ parse cleanly.
+            prop_assume!(env_port.parse::<u16>().is_err());
 
-            let read_port = port(default_port).unwrap();
+            env_locked(|| {
+                env::set_var("PORT", env_port.to_string());
 
-            TestResult::from_bool(read_port.port == env_port)
-        })
-    }
+                let port_result = port(default_port);
 
-    #[quickcheck]
-    fn port_rejects_strings(env_port: String, default_port: u16) -> TestResult {
-        if env_port.contains("\x00") {
-            return TestResult::discard();
+                assert!(port_result.is_err());
+            });
         }
-        if env_port.parse::<u16>().is_ok() {
-            return TestResult::discard();
+
+        #[test]
+        fn port_uses_default(default_port: u16) {
+            env_locked(|| {
+                env::remove_var("PORT");
+
+                let read_port = port(default_port).unwrap();
+
+                assert_eq!(default_port, read_port.port);
+            });
         }
-
-        env_locked(|| {
-            env::set_var("PORT", env_port.to_string());
-
-            let port_result = port(default_port);
-
-            TestResult::from_bool(port_result.is_err())
-        })
-    }
-
-    #[quickcheck]
-    fn port_uses_default(default_port: u16) -> bool {
-        env_locked(|| {
-            env::remove_var("PORT");
-
-            let read_port = port(default_port).unwrap();
-
-            read_port.port == default_port
-        })
     }
 
     #[test]

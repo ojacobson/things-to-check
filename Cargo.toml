@@ -28,5 +28,5 @@ features = ["actix-web"]
 
 [dev-dependencies]
 lazy_static = "~1.4"
-quickcheck = "~0.9"
-quickcheck_macros = "~0.9"
+proptest = "~0.10"
+proptest-derive = "~0.2"

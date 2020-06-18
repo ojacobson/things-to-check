@@ -1,0 +1,9 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc ee722004cd7dc5c8cfa8af5d83428a3c76f247525f738520e197ed67a0679b17 # shrinks to env_port = "", default_port = 0
+cc 8a8acaaebfe4e37af7655f14c3d9a394b2b3cc700936e36348158018ae8795ea # shrinks to env_port = "𐠁{�\"Tz`ﰃQ𑴉:*꠶䌁.", default_port = 42943
+cc f4d12f4f852ebcc99f6aa1a5208a392414d31dd98f025a7a905e1ef800d963af # shrinks to default_port = 65
