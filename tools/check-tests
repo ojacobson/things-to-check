@@ -1,0 +1,8 @@
+#!/bin/bash -ex
+
+# tools/check-tests
+#
+# Checks that the code in this project passes incorrectness checks.
+
+cargo build --locked --all-targets
+cargo test
