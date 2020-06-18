@@ -1,0 +1,8 @@
+#!/bin/bash -ex
+
+# tools/check-lints
+#
+# Checks that the code in this project passes style checks.
+
+cargo fmt -- --check
+cargo clippy -- --deny warnings

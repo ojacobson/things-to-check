@@ -1,8 +1,3 @@
 #!/bin/bash -e
 
-# dup of the list in .travis.yml
-cargo build --locked
-cargo test
-cargo fmt -- --check
-cargo clippy -- --deny warnings
-cargo udeps --locked --all-targets
+exec tools/checks

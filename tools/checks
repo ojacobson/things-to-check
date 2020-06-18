@@ -1,0 +1,11 @@
+#!/bin/bash -ex
+
+# tools/checks
+#
+# Runs all code checks. If you're automating testing, call this rather than
+# invoking a test command directly; if you're adding a test command, add it here
+# or to one of the tools called from this script.
+
+tools/check-tests
+tools/check-lints
+tools/check-dependencies

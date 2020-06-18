@@ -11,10 +11,5 @@ install:
     - cargo install cargo-udeps
     - cargo build
 
-# dup of the list in .git-hooks/pre-commit
 script:
-    - cargo build --locked
-    - cargo test
-    - cargo fmt -- --check
-    - cargo clippy -- --deny warnings
-    - cargo udeps --locked --all-targets
+    - tools/checks

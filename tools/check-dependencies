@@ -1,0 +1,7 @@
+#!/bin/bash -ex
+
+# check-dependencies
+#
+# Checks that the dependencies in this project are all in use.
+
+cargo udeps --locked --all-targets
