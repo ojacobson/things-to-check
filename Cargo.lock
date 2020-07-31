@@ -872,8 +872,9 @@ checksum = "7ffc5c5338469d4d3ea17d269fa8ea3512ad247247c30bd2df69e68309ed0a08"
 
 [[package]]
 name = "maud"
-version = "0.21.0"
-source = "git+https://github.com/lambda-fairy/maud#240ecf03b8c16021a609397a056d6ff342a6e3bc"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "84613702fc079d2e22a2d39b9a1b80a8da9e82b13fb5fe7abcd488928ea75fdb"
 dependencies = [
  "actix-web",
  "futures",
@@ -884,12 +885,14 @@ dependencies = [
 [[package]]
 name = "maud_htmlescape"
 version = "0.17.0"
-source = "git+https://github.com/lambda-fairy/maud#240ecf03b8c16021a609397a056d6ff342a6e3bc"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0fb85bccffc42302ad1e1ed8679f6a39d1317f775a37fbc3f79bdfbe054bfb7"
 
 [[package]]
 name = "maud_macros"
-version = "0.21.0"
-source = "git+https://github.com/lambda-fairy/maud#240ecf03b8c16021a609397a056d6ff342a6e3bc"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5eb626dcc05fdacb1796b5efae3ea50ca1213713925093e2febb7d33ba5c9bcd"
 dependencies = [
  "matches",
  "maud_htmlescape",
