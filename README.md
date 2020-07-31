@@ -45,16 +45,10 @@ you're willing to take that chance.
 
 To set this up:
 
-* Install additional Rust components:
+* Install additional Rust components and Cargo binaries:
 
     ```bash
-    rustup component add clippy rustfmt
-    ```
-
-* Install `cargo-udeps`:
-
-    ```bash
-    cargo install cargo-udeps
+    tools/install-tool-dependencies
     ```
 
 * Configure Git to use these hooks:

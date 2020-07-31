@@ -1,0 +1,9 @@
+#!/bin/bash -ex
+
+# tools/install-tool-dependencies
+#
+# Install Rust and Cargo components used by tool scripts, which are not part of
+# Cargo.toml.
+
+rustup component add clippy rustfmt
+cargo install cargo-udeps

@@ -1,0 +1,8 @@
+#!/bin/bash -ex
+
+# tools/update-nightly
+#
+# Install today's nightly Rust release.
+
+date "+nightly-%Y-%m-%d" > rust-toolchain
+rustup install --profile minimal "$(< rust-toolchain)"
