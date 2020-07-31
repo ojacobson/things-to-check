@@ -12,10 +12,8 @@ jobs:
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v2
-            - run: date +nightly-%Y-%m-%d > rust-toolchain
-            - run: rustup install --profile minimal "$(< rust-toolchain)"
-            - run: rustup component add clippy rustfmt
-            - run: cargo install cargo-udeps
+            - run: tools/update-nightly
+            - run: tools/install-tool-dependencies
             - run: tools/checks
             - uses: peter-evans/create-pull-request@v3
               with:
