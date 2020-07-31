@@ -1,0 +1,53 @@
+@use crate::view::{ItemQuery, Thing, Urls};
+
+@(urls: &impl Urls, index: &usize, thing: &Thing)
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@thing.markdown</title>
+    <style>
+        body @{
+            background: #dddde7;
+            font-color: #888;
+            font-family: Helvetica, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        @}
+
+        section @{
+            width: 600px;
+            margin: auto;
+        @}
+
+        p @{
+            font-size: 24px;
+        @}
+
+        a @{
+            text-decoration: none;
+        @}
+    </style>
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Troubleshooting suggestion">
+    <meta property="og:description" content="@thing.markdown">
+</head>
+<body>
+<body>
+    <section>
+        @Html(&thing.html)
+        <p><a href="@(urls.index_url(ItemQuery::default())?)">That wasn't it, suggest something else.</a></p>
+        <p><a href="@(urls.index_url(ItemQuery::from(index))?)">Share this troubleshooting suggestion.</a></p>
+    </section>
+    <a href="https://github.com/ojacobson/things-to-check/">
+        <img
+            style="position: absolute; top: 0; right: 0; border: 0;"
+            src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67"
+            alt="Fork me on GitHub"
+            data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png">
+    </a>
+</body>
+</html>

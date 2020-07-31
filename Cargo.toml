@@ -16,15 +16,15 @@ actix-rt = "~1.0"
 actix-web = "~2.0"
 pulldown-cmark = "~0.7"
 rand = "~0.7"
+ructe = "~0.11"
 serde = "~1.0"
 serde_urlencoded = "~0.6"
 serde_yaml = "~0.8"
 thiserror = "~1.0"
 url = "~2.1"
 
-[dependencies.maud]
-git = "https://github.com/lambda-fairy/maud"
-features = ["actix-web"]
+[build-dependencies]
+ructe = "~0.11"
 
 [dev-dependencies]
 lazy_static = "~1.4"

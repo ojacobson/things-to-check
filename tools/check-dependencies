@@ -4,4 +4,6 @@
 #
 # Checks that the dependencies in this project are all in use.
 
-cargo udeps --locked --all-targets
+# This actually requires nightly, unavoidably:
+#   <https://github.com/est31/cargo-udeps#usage>
+cargo +nightly udeps --locked --all-targets
