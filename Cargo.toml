@@ -23,7 +23,7 @@ thiserror = "~1.0"
 url = "~2.1"
 
 [dependencies.maud]
-git = "https://github.com/lambda-fairy/maud"
+version = "~0.22"
 features = ["actix-web"]
 
 [dev-dependencies]
